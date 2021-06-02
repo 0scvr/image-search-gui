@@ -29,7 +29,7 @@
             </RadioButton>
          </children>
       </VBox>
-      <Button fx:id="openImageButton" mnemonicParsing="false" text="Choisir une image" />
+      <Button fx:id="openImageButton" mnemonicParsing="false" onAction="#pickImage" text="Choisir une image" />
       <VBox prefHeight="200.0" prefWidth="100.0">
          <children>
             <Label fx:id="filenameLabel" prefHeight="26.0" prefWidth="34.0" text="fichier">
@@ -37,7 +37,7 @@
                   <Insets bottom="6.0" />
                </VBox.margin>
             </Label>
-            <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
+            <ImageView fx:id="selectedImage" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
          </children>
          <HBox.margin>
             <Insets left="12.0" />
