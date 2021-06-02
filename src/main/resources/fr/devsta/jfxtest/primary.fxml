@@ -4,10 +4,10 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-
 
 <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/15" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fr.devsta.jfxtest.PrimaryController">
    <children>
@@ -18,8 +18,11 @@
                   <Insets bottom="6.0" />
                </VBox.margin>
             </Label>
-            <RadioButton fx:id="rgbRadio" mnemonicParsing="false" text="RGB" />
-            <RadioButton fx:id="hsvRadio" mnemonicParsing="false" text="HSV">
+            <RadioButton fx:id="rgbRadio" mnemonicParsing="false" onAction="#getSelectedMode" selected="true" text="RGB">
+               <toggleGroup>
+                  <ToggleGroup fx:id="searchMode" />
+               </toggleGroup></RadioButton>
+            <RadioButton fx:id="hsvRadio" mnemonicParsing="false" onAction="#getSelectedMode" text="HSV" toggleGroup="$searchMode">
                <VBox.margin>
                   <Insets top="8.0" />
                </VBox.margin>
