@@ -4,208 +4,289 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fr.unistra.pelican.algorithms.io.ImageLoader;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
 public class PrimaryController implements Initializable {
+	@FXML
+	private GridPane resultsGrid;
 
-  @FXML
-  private ListView<String> resultsListView;
-  @FXML
-  private ImageView selectedImage;
-  @FXML
-  private Label filenameLabel;
-  @FXML
-  private ToggleGroup searchMode;
-  private String imageFile;
+	@FXML
+	private ImageView selectedImage;
 
+	@FXML
+	private Label filenameLabel;
 
-  public void pickImage(ActionEvent actionEvent) throws MalformedURLException {
+	@FXML
+	private ToggleGroup searchMode;
 
-    FileChooser fileChooser = new FileChooser();
-    fileChooser.setTitle("Select Image File");
-    fileChooser.getExtensionFilters()
-        .addAll(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg"));
-    File selectedFile = fileChooser.showOpenDialog(filenameLabel.getScene().getWindow());
+	private String imageFile;
 
-    if (selectedFile != null) {
+	private Connection dbConnection;
 
-      imageFile = selectedFile.toURI().toURL().toString();
+	@FXML
+	private Label databasePathLabel;
 
-      Image image = new Image(imageFile);
-      filenameLabel.setText(selectedFile.getName());
-      // System.out.println(selectedFile.getAbsolutePath());
-      selectedImage.setImage(image);
-    } else {
-      filenameLabel.setText("Image file selection cancelled.");
-    }
-  }
+	public void pickImage(ActionEvent actionEvent) throws MalformedURLException {
 
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Choisir une image");
+		fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg"));
+		File selectedFile = fileChooser.showOpenDialog(filenameLabel.getScene().getWindow());
 
-  /**
-   * Creates a connection to the specified SQLite database and returns it.
-   * 
-   * @param pathToDatabase path to .db file
-   * @return connection to SQLite database
-   * @throws SQLException
-   */
-  public static Connection getDatabase(String pathToDatabase) throws SQLException {
-    // /Users/oscar/Documents/LPIOT/ImageJava/imagesearch/images.db
-    String url = "jdbc:sqlite:" + pathToDatabase;
-    Connection conn = DriverManager.getConnection(url);
-    System.out.println("Connection to SQLite database has been established.");
-    return conn;
-  }
+		if (selectedFile != null) {
 
+			imageFile = selectedFile.toURI().toURL().toString();
 
-  public void startSearch(ActionEvent evt) {
-    RadioButton selectedRadioButton = (RadioButton) searchMode.getSelectedToggle();
+			Image image = new Image(imageFile);
+			filenameLabel.setText(selectedFile.getName());
+			// System.out.println(selectedFile.getAbsolutePath());
+			selectedImage.setImage(image);
+		} else {
+			filenameLabel.setText("Image file selection cancelled.");
+		}
+	}
 
-    if (selectedRadioButton.getText() == "RGB") {
-      System.out.println("RGB is selected");
-    } else {
-      System.out.println("HSV is selected");
-    }
+	public void startSearch(ActionEvent evt) {
+		RadioButton selectedRadioButton = (RadioButton) searchMode.getSelectedToggle();
 
-    String imgPath = imageFile.split("file:")[1];
-    System.out.println(imgPath);
+		if (selectedRadioButton.getText() == "RGB") {
+			System.out.println("RGB is selected");
+		} else {
+			System.out.println("HSV is selected");
+		}
 
-    try {
-      Connection connection = getDatabase(getClass().getResource("images.db").getPath());
-      fr.unistra.pelican.Image testImage = ImageLoader.exec(imgPath);
-      // // addImagesToDatabase("/Users/oscar/Documents/LPIOT/ImageJava/imagesearch/images",
-      // // connection);
-      //
-      TreeMap<Double, String> images =
-          findSimilarImages(testImage, connection, selectedRadioButton.getText());
+		String imgPath = imageFile.split("file:")[1];
+		System.out.println(imgPath);
 
-      for (Entry<Double, String> entry : images.entrySet()) {
-        System.out.println(entry.getKey() + " : " + entry.getValue());
-      }
+		try {
+			fr.unistra.pelican.Image testImage = ImageLoader.exec(imgPath);
 
+			TreeMap<Double, String> images = findSimilarImages(testImage, selectedRadioButton.getText());
 
-      Image IMAGE_RUBY =
-          new Image("https://upload.wikimedia.org/wikipedia/commons/f/f1/Ruby_logo_64x64.png");
-      Image IMAGE_VISTA = new Image("http://antaki.ca/bloom/img/windows_64x64.png");
+//			ScrollPane sp = new ScrollPane();
+//			sp.setContent(new ImageView(roses));
+//			VBox vbox = new VBox(5);
 
-      Image[] listOfImages = {IMAGE_RUBY, IMAGE_VISTA};
+			int row = 0;
+			for (Entry<Double, String> entry : images.entrySet()) {
+				resultsGrid.add(new Label(entry.getKey().toString()), 0, row);
 
-      ObservableList<String> items = FXCollections.observableArrayList("RUBY", "VISTA");
-      resultsListView.setItems(items);
+//				Image image = new Image(entry.getValue());
+//				resultsVbox.getChildren()
+//				System.out.println(image.getUrl());
+//						.add(new HBox(4, new Label(entry.getKey().toString()), new ImageView(entry.getValue())));
+				ImageView iv = new ImageView("https://i.imgur.com/Leiecq4.jpeg");
+				resultsGrid.add(iv, 1, row);
+				row++;
+//				iv.setFitHeight(140);
+//				iv.setPreserveRatio(true);
+//				resultsVbox.getChildren().add(new HBox(4, new Label(entry.getKey().toString()), iv));
+			}
+		} catch (SQLException e) {
+			System.err.println("Some error happenned");
+		}
+	}
 
-      resultsListView.setCellFactory(param -> new ListCell<String>() {
-        private ImageView imageView = new ImageView();
+	/**
+	 * Trouve les 10 images les plus similaires dans la base de données.
+	 * 
+	 * @param testImage
+	 * @param mode      Méthode de recherche ("RGB" ou "HSV")
+	 * @return
+	 * @throws SQLException
+	 */
+	public TreeMap<Double, String> findSimilarImages(fr.unistra.pelican.Image testImage, String mode)
+			throws SQLException {
 
-        @Override
-        public void updateItem(String name, boolean empty) {
-          super.updateItem(name, empty);
-          if (empty) {
-            setText(null);
-            setGraphic(null);
-          } else {
-            if (name.equals("RUBY"))
-              imageView.setImage(listOfImages[0]);
-            else if (name.equals("VISTA"))
-              imageView.setImage(listOfImages[1]);
-            setText(name);
-            setGraphic(imageView);
-          }
-        }
-      });
-    } catch (SQLException e) {
-      System.err.println("Some error happenned");
-    }
-  }
+		TreeMap<Double, String> images = new TreeMap<>();
+		Gson gson = new GsonBuilder().create();
+		double[][] optimizedHistogram = null;
 
-  /**
-   * Returns the 10 most similar images in the database.
-   * 
-   * @param testImage base image to compare to
-   * @param conn SQLite database connection
-   * @return
-   * @throws SQLException
-   */
-  public static TreeMap<Double, String> findSimilarImages(fr.unistra.pelican.Image testImage,
-      Connection conn, String mode) throws SQLException {
+		// Step 1: Apply filters to request image & get optimized histogram
+		fr.unistra.pelican.Image newRequestImage = Utils.applyMedianFilter(testImage);
 
-    TreeMap<Double, String> images = new TreeMap<>();
-    Gson gson = new GsonBuilder().create();
-    double[][] optimizedHistogram = null;
+		switch (mode) {
+		case "RGB":
+			double[][] requestHistogram = Utils.getRgbHistogram(newRequestImage);
+			double[][] discreteHistogram = Utils.getDiscreteHistogram(requestHistogram);
+			optimizedHistogram = Utils.getNormalisedRgbHistogram(discreteHistogram,
+					(newRequestImage.getXDim() * newRequestImage.getYDim()));
+			break;
+		case "HSV":
+			double[][] requestHistogramHsv = Utils.getHsvHistogram(newRequestImage);
+			double[][] discreteHistogramHsv = Utils.getDiscreteHsvHistogram(requestHistogramHsv);
+			optimizedHistogram = Utils.getNormalisedRgbHistogram(discreteHistogramHsv,
+					(newRequestImage.getXDim() * newRequestImage.getYDim()));
+			break;
+		}
 
-    // Step 1: Apply filters to request image & get optimized histogram
-    fr.unistra.pelican.Image newRequestImage = Utils.applyMedianFilter(testImage);
+		// Step 2: Fetch images from the database & calculate their similarity with the
+		String sql = "SELECT * FROM images";
+		ResultSet rs = dbConnection.createStatement().executeQuery(sql);
 
-    switch (mode) {
-      case "RGB":
-        double[][] requestHistogram = Utils.getRgbHistogram(newRequestImage);
-        double[][] discreteHistogram = Utils.getDiscreteHistogram(requestHistogram);
-        optimizedHistogram = Utils.getNormalisedRgbHistogram(discreteHistogram,
-            (newRequestImage.getXDim() * newRequestImage.getYDim()));
-        break;
-      case "HSV":
-        double[][] requestHistogramHsv = Utils.getHsvHistogram(newRequestImage);
-        double[][] discreteHistogramHsv = Utils.getDiscreteHsvHistogram(requestHistogramHsv);
-        optimizedHistogram = Utils.getNormalisedRgbHistogram(discreteHistogramHsv,
-            (newRequestImage.getXDim() * newRequestImage.getYDim()));
-        break;
-    }
+		switch (mode) {
+		case "RGB":
+			while (rs.next()) {
+				double[][] resultHistogram = gson.fromJson(rs.getString("histogram"), double[][].class);
+				double similarityRatio = Utils.getRgbSimilarity(optimizedHistogram, resultHistogram);
+				images.put(similarityRatio, rs.getString("filename"));
+			}
+			break;
+		case "HSV":
+			while (rs.next()) {
+				double[][] resultHistogram = gson.fromJson(rs.getString("hsvHistogram"), double[][].class);
+				double similarityRatio = Utils.getRgbSimilarity(optimizedHistogram, resultHistogram);
+				images.put(similarityRatio, rs.getString("filename"));
+			}
+			break;
+		}
 
+		int count = 0;
+		TreeMap<Double, String> top10 = new TreeMap<Double, String>();
+		for (Entry<Double, String> entry : images.entrySet()) {
+			if (count >= 10)
+				break;
 
-    // Step 2: Fetch images from the database & calculate their similarity with the request image
-    String sql = "SELECT * FROM images";
-    Statement stmt = conn.createStatement();
-    ResultSet rs = stmt.executeQuery(sql);
+			top10.put(entry.getKey(), entry.getValue());
+			count++;
+		}
+		return top10;
+	}
 
+	/**
+	 * Affiche une fenêtre pour sélectionner des images et les insère dans la base
+	 * de données.
+	 * 
+	 * @param evt
+	 */
+	public void addImagesInDatabase(ActionEvent evt) {
+		String sql = "INSERT INTO images(filename,histogram,hsvHistogram,grayscale) VALUES(?,?,?,?)";
+		Gson gson = new GsonBuilder().create();
 
-    switch (mode) {
-      case "RGB":
-        while (rs.next()) {
-          double[][] resultHistogram = gson.fromJson(rs.getString("histogram"), double[][].class);
-          double similarityRatio = Utils.getRgbSimilarity(optimizedHistogram, resultHistogram);
-          images.put(similarityRatio, rs.getString("filename"));
-        }
-        break;
-      case "HSV":
-        while (rs.next()) {
-          double[][] resultHistogram =
-              gson.fromJson(rs.getString("hsvHistogram"), double[][].class);
-          double similarityRatio = Utils.getRgbSimilarity(optimizedHistogram, resultHistogram);
-          images.put(similarityRatio, rs.getString("filename"));
-        }
-        break;
-    }
+		FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Choisir des images");
+		fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Images", "*.jpg"));
+		List<File> selectedFiles = fileChooser.showOpenMultipleDialog(filenameLabel.getScene().getWindow());
 
+		if (selectedFiles != null && selectedFiles.size() > 0) {
+			for (File file : selectedFiles) {
+				fr.unistra.pelican.Image img = ImageLoader.exec(file.getAbsolutePath());
 
-    // TODO: return on first 10 entries
-    return images;
-  }
+				// Apply filters to every image & get its optimized histogram
+				fr.unistra.pelican.Image newRequestImage = Utils.applyMedianFilter(img);
+				double[][] requestHistogram = Utils.getRgbHistogram(newRequestImage);
+				double[][] discreteHistogram = Utils.getDiscreteHistogram(requestHistogram);
+				double[][] optimizedHistogram = Utils.getNormalisedRgbHistogram(discreteHistogram,
+						(newRequestImage.getXDim() * newRequestImage.getYDim()));
 
+				// HSV version
+				double[][] requestHistogramHsv = Utils.getHsvHistogram(newRequestImage);
+				double[][] discreteHistogramHsv = Utils.getDiscreteHsvHistogram(requestHistogramHsv);
+				double[][] optimizedHistogramHsv = Utils.getNormalisedRgbHistogram(discreteHistogramHsv,
+						(newRequestImage.getXDim() * newRequestImage.getYDim()));
 
-  @Override
-  public void initialize(URL location, ResourceBundle resources) {
-    // TODO Auto-generated method stub
+				String stringHistogram = gson.toJson(optimizedHistogram);
+				String stringHsvHistogram = gson.toJson(optimizedHistogramHsv);
 
-  }
+				try {
+					PreparedStatement pstmt = dbConnection.prepareStatement(sql);
+					pstmt.setString(1, file.getAbsolutePath());
+					pstmt.setString(2, stringHistogram);
+					pstmt.setString(3, stringHsvHistogram);
+					pstmt.setInt(4, 0);
+					pstmt.executeUpdate();
+					System.out.println(file.getName() + " a été ajouter à la base d'images.");
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		} else {
+			System.out.println("Erreur! Aucune image n'a été sélectionnée.");
+		}
+	}
+
+	/**
+	 * Vide la base de données utilisée.
+	 * 
+	 * @param evt
+	 */
+	public void emptyDatabase(ActionEvent evt) {
+		try {
+			dbConnection.createStatement().executeQuery("DELETE FROM images");
+			System.out.println("La base de données a été vidée.");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Affiche une fenêtre pour choisir une base de données et tente de se connecter
+	 * à celle-ci.
+	 * 
+	 * @param evt
+	 */
+	public void setDatabase(ActionEvent evt) {
+		try {
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.setTitle("Choisir une base de données");
+			fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Base de données SQLite", "*.db"));
+			File selectedFile = fileChooser.showOpenDialog(filenameLabel.getScene().getWindow());
+
+			if (selectedFile != null) {
+
+				try {
+					dbConnection = Utils.getDatabase(selectedFile.toURI().toURL().toString());
+					System.out.println("La base de données sélectionnée a bien été enregistrée.");
+				} catch (MalformedURLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				databasePathLabel.setText(selectedFile.getAbsolutePath());
+			} else {
+				databasePathLabel.setText("");
+				dbConnection.close();
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void initialize(URL location, ResourceBundle resources) {
+		// Initialize connection to default database
+		try {
+			String defaultDatabasePath = getClass().getResource("images.db").getPath();
+			dbConnection = Utils.getDatabase(defaultDatabasePath);
+			databasePathLabel.setText(defaultDatabasePath);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
 
 }
