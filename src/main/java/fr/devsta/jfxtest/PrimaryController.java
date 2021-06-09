@@ -19,17 +19,23 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
 public class PrimaryController implements Initializable {
 	@FXML
-	private GridPane resultsGrid;
+	private TableView<ResultImage> resultTable;
+	@FXML
+	private TableColumn<ResultImage, Float> distanceColumn;
+	@FXML
+	private TableColumn<ResultImage, String> nameColumn;
+	@FXML
+	private TableColumn<ResultImage, String> openColumn;
 
 	@FXML
 	private ImageView selectedImage;
@@ -84,24 +90,8 @@ public class PrimaryController implements Initializable {
 
 			TreeMap<Double, String> images = findSimilarImages(testImage, selectedRadioButton.getText());
 
-//			ScrollPane sp = new ScrollPane();
-//			sp.setContent(new ImageView(roses));
-//			VBox vbox = new VBox(5);
-
-			int row = 0;
 			for (Entry<Double, String> entry : images.entrySet()) {
-				resultsGrid.add(new Label(entry.getKey().toString()), 0, row);
-
-//				Image image = new Image(entry.getValue());
-//				resultsVbox.getChildren()
-//				System.out.println(image.getUrl());
-//						.add(new HBox(4, new Label(entry.getKey().toString()), new ImageView(entry.getValue())));
-				ImageView iv = new ImageView("https://i.imgur.com/Leiecq4.jpeg");
-				resultsGrid.add(iv, 1, row);
-				row++;
-//				iv.setFitHeight(140);
-//				iv.setPreserveRatio(true);
-//				resultsVbox.getChildren().add(new HBox(4, new Label(entry.getKey().toString()), iv));
+				resultTable.getItems().add(new ResultImage(entry.getKey(), entry.getValue()));
 			}
 		} catch (SQLException e) {
 			System.err.println("Some error happenned");
@@ -282,6 +272,11 @@ public class PrimaryController implements Initializable {
 			String defaultDatabasePath = getClass().getResource("images.db").getPath();
 			dbConnection = Utils.getDatabase(defaultDatabasePath);
 			databasePathLabel.setText(defaultDatabasePath);
+
+			openColumn.setCellValueFactory(new PropertyValueFactory<>("openButton"));
+			nameColumn.setCellValueFactory(new PropertyValueFactory<>("filePath"));
+			distanceColumn.setCellValueFactory(new PropertyValueFactory<>("distance"));
+
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
