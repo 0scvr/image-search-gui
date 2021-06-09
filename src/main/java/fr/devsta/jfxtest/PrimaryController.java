@@ -206,7 +206,7 @@ public class PrimaryController implements Initializable {
 					pstmt.setString(3, stringHsvHistogram);
 					pstmt.setInt(4, 0);
 					pstmt.executeUpdate();
-					System.out.println(file.getName() + " a été ajouter à la base d'images.");
+					System.out.println(file.getName() + " a été ajoutée à la base d'images.");
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
@@ -223,7 +223,7 @@ public class PrimaryController implements Initializable {
 	 */
 	public void emptyDatabase(ActionEvent evt) {
 		try {
-			dbConnection.createStatement().executeQuery("DELETE FROM images");
+			dbConnection.createStatement().executeUpdate("DELETE FROM images");
 			System.out.println("La base de données a été vidée.");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -250,7 +250,6 @@ public class PrimaryController implements Initializable {
 					dbConnection = Utils.getDatabase(selectedFile.toURI().toURL().toString());
 					System.out.println("La base de données sélectionnée a bien été enregistrée.");
 				} catch (MalformedURLException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 
@@ -260,7 +259,6 @@ public class PrimaryController implements Initializable {
 				dbConnection.close();
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -270,6 +268,7 @@ public class PrimaryController implements Initializable {
 		// Initialize connection to default database
 		try {
 			String defaultDatabasePath = getClass().getResource("images.db").getPath();
+
 			dbConnection = Utils.getDatabase(defaultDatabasePath);
 			databasePathLabel.setText(defaultDatabasePath);
 

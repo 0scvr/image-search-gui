@@ -63,7 +63,7 @@
 					prefHeight="180.0" prefWidth="200.0">
 					<children>
 						<Label fx:id="databasePathLabel" layoutX="203.0"
-							layoutY="20.0" prefHeight="17.0" prefWidth="23.0" />
+							layoutY="20.0" prefHeight="17.0" prefWidth="600.0" />
 						<Button layoutX="14.0" layoutY="98.0"
 							mnemonicParsing="false" onAction="#emptyDatabase"
 							text="Vider la base de données" />
