@@ -131,7 +131,7 @@ public class PrimaryController implements Initializable {
 			break;
 		}
 
-		// Step 2: Fetch images from the database & calculate their similarity with the
+		// Step 2: Fetch images from the database & calculate their similarity.
 		String sql = "SELECT * FROM images";
 		ResultSet rs = dbConnection.createStatement().executeQuery(sql);
 
@@ -226,7 +226,6 @@ public class PrimaryController implements Initializable {
 			dbConnection.createStatement().executeUpdate("DELETE FROM images");
 			System.out.println("La base de données a été vidée.");
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -277,7 +276,6 @@ public class PrimaryController implements Initializable {
 			distanceColumn.setCellValueFactory(new PropertyValueFactory<>("distance"));
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
